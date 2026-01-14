@@ -1,6 +1,6 @@
 import streamlit as st
-from utils import fetch_live_aqi, predict_aqi, aqi_style, health_tip, init_settings
-init_settings()
+import pandas as pd
+from utils import fetch_live_aqi, predict_aqi, aqi_style, health_tip, get_settings
 
 st.title("📍 Live Air Quality")
 
@@ -12,6 +12,14 @@ city_input = st.text_input(
     "Enter City Name (for live AQI)",
     "Delhi"
 )
+
+@st.cache_data()
+def load_data():
+    return pd.read_csv("data/cleaned_station_day_with_station_info.csv",
+                       parse_dates=["Date"])
+df = load_data()
+
+cities = sorted(df["City"].unique())
 
 if st.button("🚀 Fetch Live AQI"):
     with st.spinner("Fetching live data..."):
@@ -62,13 +70,13 @@ if st.button("🚀 Fetch Live AQI"):
                 font-weight:bold;
             ">
                 <div style="font-size:50px;">{emoji}</div>
-                <div style="font-size:20px;">{h_tip}</div>
                 Live AQI: {aqi_live}
             </div>
             """,
             unsafe_allow_html=True
         )
-
+        st.info(f"{h_tip}")
+        
         st.write("**Dominant Pollutant:**", dominant)
 
         st.write("### Pollutant Concentrations (Live API)")
@@ -91,7 +99,8 @@ if st.button("🚀 Fetch Live AQI"):
                     0,
                     pm25_live,
                     pm10_live
-                ]
+                ],
+                df
             )
 
             st.write("---")
@@ -99,4 +108,5 @@ if st.button("🚀 Fetch Live AQI"):
             st.info(f"📊 Model Predicted Category: {predicted_cat}")
         except Exception as e:
             st.warning("Model prediction unavailable for this city.")
+            st.error(f"Debug info: {e}")
 

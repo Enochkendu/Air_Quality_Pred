@@ -1,8 +1,15 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from utils import forecast_next_days, load_forecast_model, make_forecast_feature, init_settings
-init_settings()
+from utils import train_city_models, get_settings
+
+settings = get_settings()
+
+st.write(f"Theme: {settings['theme']}")
+st.write(f"Show Grid: {settings['show_grid']}")
+
+st.set_page_config(page_title="AQI Forecasr", layout="wide")
 st.title("🔮 AQI Forecast Using Historical Data")
 
 @st.cache_data
@@ -14,36 +21,83 @@ df = load_data()
 cities = sorted(df["City"].unique())
 city = st.selectbox("Select City", cities)
 
-days = st.slider("Forecast Days", 3, 14, 7)
+default_days = st.session_state.get("forecast_days", 7)
+days = st.slider("Forecast Days", 3, 14, default_days)
+
 
 if st.button("Generate Forecast"):
-    city_df = df[df["City"] == city][["Date", "AQI"]].dropna()
+    city_df = df[df["City"] == city].sort_values("Date").copy()
 
-    forecast = forecast_next_days(city, city_df, days)
-
-    if forecast is None:
-        st.error("No forecast model available for this city.")
+    if len(city_df) < 50:
+        st.error("Not enough data for this city.")
     else:
-        f_dates = [x[0] for x in forecast]
-        f_values = [x[1] for x in forecast]
+        models = train_city_models(city, df)
 
-        hist_tail = city_df.tail(30)
+        if models == (None, None):
+            st.error("Model unavailable for this city.")
+        else:
+            reg, _ = models
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(hist_tail["Date"], hist_tail["AQI"], label="Historical")
-        ax.plot(f_dates, f_values, marker="o", label="Forecast")
+            history = city_df.tail(30)
+            aqi_series = list(city_df["AQI"].values)
 
-        ax.set_title(f"{city} AQI Forecast")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("AQI")
-        ax.legend()
-        ax.grid(True)
+            last_row = city_df.iloc[-1]
+            pm25_lag = last_row["PM2.5"]
+            pm10_lag = last_row["PM10"]
 
-        st.pyplot(fig)
+            forecast_values = []
+            forecast_dates = []
 
-        with st.expander("📅 Forecast Table"):
-            table_df = pd.DataFrame({
-                "Date": f_dates,
-                "Predicted AQI": [round(x, 1) for x in f_values]
-            })
-            st.dataframe(table_df)
+            current_date = city_df["Date"].iloc[-1]
+
+            for _ in range(days):
+                next_date = current_date + pd.Timedelta(days=1)
+
+                month = next_date.month
+                dow = next_date.dayofweek
+
+                X = [
+                    last_row["PM2.5"],
+                    last_row["PM10"],
+                    last_row["NO2"],
+                    last_row["SO2"],
+                    last_row["CO"],
+                    last_row["O3"],
+                    month,
+                    dow,
+                    pm25_lag,
+                    pm10_lag
+                ]
+
+                X = np.array(X).reshape(1, -1)
+                next_aqi = reg.predict(X)[0]
+
+                forecast_values.append(next_aqi)
+                forecast_dates.append(next_date)
+
+                pm25_lag = last_row["PM2.5"]
+                pm10_lag = last_row["PM10"]
+                current_date = next_date
+
+    
+
+            # Plot
+            fig, ax = plt.subplots(figsize=(10, 4))
+            ax.plot(history["Date"], history["AQI"], label="Historical")
+            ax.plot(forecast_dates, forecast_values, marker="o", label="Forecast")
+
+            ax.set_title(f"{city} AQI Forecast")
+            ax.set_xlabel("Date")
+            ax.set_ylabel("AQI")
+            ax.legend()
+            show_grid = st.session_state.get("show_grid", True)
+            ax.grid(show_grid)
+
+            st.pyplot(fig)
+
+            with st.expander("📅 Forecast Table"):
+                table_df = pd.DataFrame({
+                    "Date": forecast_dates,
+                    "Predicted AQI": [round(x, 1) for x in forecast_values]
+                })
+                st.dataframe(table_df)

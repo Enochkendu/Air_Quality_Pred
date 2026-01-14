@@ -1,6 +1,6 @@
 import streamlit as st
-from utils import init_settings
-init_settings()
+from utils import get_settings
+
 
 st.set_page_config(page_title="Settings", page_icon="⚙️", layout="centered")
 
@@ -8,93 +8,77 @@ st.set_page_config(page_title="Settings", page_icon="⚙️", layout="centered")
 st.markdown("## ⚙️ App Settings")
 st.markdown("Customize how your AQI app behaves and displays data.")
 
+# Initialize defaults
+if "theme" not in st.session_state:
+    st.session_state.theme = "Light"
+
+if "show_grid" not in st.session_state:
+    st.session_state.show_grid = True
+
+if "forecast_days" not in st.session_state:
+    st.session_state.forecast_days = 7
+
+if "health_alerts" not in st.session_state:
+    st.session_state.health_alerts = True
 
 st.divider()
-
-
 # ------------------ Display Settings ------------------
 st.subheader("🎨 Display Preferences")
 
+# -------------------
+# Appearance
+# -------------------
 
-col1, col2 = st.columns(2)
-
-
-with col1:
-    theme = st.selectbox("Theme Mode", ["Light", "Dark", "System"])
-
-
-with col2:
-    show_emojis = st.toggle("Show AQI Emojis", value=True)
-
-
-font_size = st.slider("Font Size", 12, 22, 16)
-
-
-st.divider()
-
-
-# ------------------ Units ------------------
-st.subheader("📏 Units & Formats")
-
-
-col3, col4 = st.columns(2)
-
-
-with col3:
-    aqi_standard = st.selectbox("AQI Standard", ["India (CPCB)", "US EPA", "WHO"])
-
-
-with col4:
-    time_format = st.selectbox("Time Format", ["12-hour", "24-hour"])
-
-
-st.divider()
-
-
-# ------------------ API Settings ------------------
-st.subheader("🔌 API Configuration")
-
-
-st.info("Your API keys are stored securely using Streamlit secrets.")
-
-
-waqi_status = "Connected" if "WAQI_TOKEN" in st.secrets else "Not Configured"
-st.metric("WAQI API Status", waqi_status)
-
-
-st.divider()
-
-
-# ------------------ Model Settings ------------------
-st.subheader("🧠 Model Behavior")
-
-
-confidence_level = st.select_slider(
-"Prediction Confidence Level",
-options=["Low", "Medium", "High"],
-value="Medium"
+st.session_state.theme = st.radio(
+    "Theme Mode",
+    ["Light", "Dark"],
+    index=0 if st.session_state.theme == "Light" else 1
 )
 
+st.divider()
+# -------------------
+# Charts
+# -------------------
+st.subheader("📊 Charts")
 
-forecast_days = st.slider("Default Forecast Days", 3, 14, 7)
-
+st.session_state.show_grid = st.checkbox(
+    "Show Grid on Charts",
+    value=st.session_state.show_grid
+)
 
 st.divider()
+# -------------------
+# Forecast
+# -------------------
+st.subheader("🔮 Forecast")
+
+st.session_state.forecast_days = st.slider(
+    "Default Forecast Days",
+    3, 14,
+    st.session_state.forecast_days
+)
+
+st.divider()
+# -------------------
+# Health Alerts
+# -------------------
+st.subheader("🚨 Health Alerts")
+
+st.session_state.health_alerts = st.toggle(
+    "Enable Health Alerts",
+    value=st.session_state.health_alerts
+)
+
+st.divider()
+# -------------------
+# Debug Panel
+# -------------------
+with st.expander("🧪 Debug: Current Settings"):
+    st.json({
+        "Theme": st.session_state.theme,
+        "Show Grid": st.session_state.show_grid,
+        "Forecast Days": st.session_state.forecast_days,
+        "Health Alerts": st.session_state.health_alerts
+    })
 
 
-# ------------------ Save ------------------
-st.subheader("💾 Save Preferences")
-
-
-if st.button("Save Settings"):
-    st.success("Settings saved successfully!")
-
-
-with st.expander("ℹ️ About Settings"):
-    st.markdown("""
-    These settings allow you to customize your experience.
-    • Display: Control UI appearance
-    • Units: Choose AQI interpretation
-    • API: Live data configuration
-    • Models: Prediction behavior
-    """)

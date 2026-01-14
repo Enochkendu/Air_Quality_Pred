@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
-from utils import predict_aqi, init_settings
+from utils import predict_aqi, get_settings
 import datetime
 
-init_settings()
 
 # ------------- PAGE CONFIG ----------------
 st.set_page_config(

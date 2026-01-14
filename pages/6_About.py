@@ -1,6 +1,6 @@
 import streamlit as st
-from utils import init_settings
-init_settings()
+from utils import get_settings
+
 
 st.title("ℹ️ About This Project")
 
