@@ -1,16 +1,16 @@
 import streamlit as st
-from utils import get_settings
-
+from utils import get_settings, apply_theme
 
 st.set_page_config(page_title="Settings", page_icon="⚙️", layout="centered")
 
+apply_theme()
 
 st.markdown("## ⚙️ App Settings")
 st.markdown("Customize how your AQI app behaves and displays data.")
 
 # Initialize defaults
 if "theme" not in st.session_state:
-    st.session_state.theme = "Light"
+    st.session_state.theme = "light"
 
 if "show_grid" not in st.session_state:
     st.session_state.show_grid = True
@@ -29,12 +29,17 @@ st.subheader("🎨 Display Preferences")
 # Appearance
 # -------------------
 
-st.session_state.theme = st.radio(
-    "Theme Mode",
+theme_choice = st.radio(
+    "Choose Theme",
     ["Light", "Dark"],
     index=0 if st.session_state.theme == "Light" else 1
 )
 
+if st.button("Apply Theme"):
+    st.session_state.theme = theme_choice
+    st.success("Theme updated!")
+    st.rerun()
+    
 st.divider()
 # -------------------
 # Charts

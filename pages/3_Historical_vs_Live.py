@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils import fetch_live_aqi, get_city_history, get_settings
+from utils import fetch_live_aqi, get_city_history, get_settings, apply_theme
 import plotly.graph_objects as go
 
+apply_theme()
 
 st.title("📊 Historical vs Live AQI Comparison")
 

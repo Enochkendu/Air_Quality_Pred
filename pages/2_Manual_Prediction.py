@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from utils import predict_aqi, aqi_style, health_tip, get_settings
+from utils import predict_aqi, aqi_style, health_tip, get_settings, apply_theme
 
 
 st.set_page_config(page_title="Manual AQI Prediction", layout="centered")
+
+apply_theme()
+
 st.title("🧪 Manual AQI Prediction")
 
 @st.cache_data()

@@ -1,8 +1,16 @@
 import streamlit as st
 import pandas as pd
 from utils import fetch_live_aqi, predict_aqi, aqi_style, health_tip, get_settings
+from utils import apply_theme
 
+# ------------- PAGE CONFIG ----------------
+st.set_page_config(
+    page_title="Live AQI",
+    layout="centered"
+)
 st.title("📍 Live Air Quality")
+
+apply_theme()
 
 st.markdown("""
 Get **real-time air quality** for cities using the WAQI API.

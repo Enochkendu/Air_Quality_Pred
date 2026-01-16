@@ -2,15 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import train_city_models, get_settings
+from utils import train_city_models, get_settings, apply_theme
 
-settings = get_settings()
-
-st.write(f"Theme: {settings['theme']}")
-st.write(f"Show Grid: {settings['show_grid']}")
-
-st.set_page_config(page_title="AQI Forecasr", layout="wide")
+st.set_page_config(page_title="AQI Forecast", layout="centered")
 st.title("🔮 AQI Forecast Using Historical Data")
+
+apply_theme()
 
 @st.cache_data
 def load_data():

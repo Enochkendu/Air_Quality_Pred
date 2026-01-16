@@ -1,5 +1,8 @@
 import streamlit as st
-from utils import get_settings
+from utils import get_settings, apply_theme
+
+st.set_page_config(page_title="Insights", layout="centered")
+apply_theme()
 
 
 st.title("🤖 Model Insights")
